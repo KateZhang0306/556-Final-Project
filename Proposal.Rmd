@@ -19,26 +19,55 @@ library(ggplot2)
 ```
 
 
-## Data Sets
+# Data Sets
 
 • Describe the list of data sets you are thinking for the final project.
 
-### Starbucks 
+## Starbucks Customer Satisfactory Survey
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+### Introduction 
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+This dataset, titled 'Starbucks Customer Survey,' is originally from Kaggle (https://www.kaggle.com/datasets/mahirahmzh/starbucks-customer-retention-malaysia-survey/data). It consists of survey responses from over 100 participants regarding their purchasing behavior at Starbucks in Malaysia. Incomes are shown in Malaysian Ringgit (RM). The dataset includes 33 variables, covering demographic information about the customers—such as gender, age range, employment status, and income range—as well as their current behavior in purchasing from Starbucks, including the products purchased and the amount of money spent.
+
 
 ```{r cars}
-summary(cars)
+# import data
+starbucks_data <- read.csv("Starbucks satisfactory survey encode cleaned.csv")
 ```
 
-## Including Plots
+### Variables Description
 
-You can also embed plots, for example:
+[to be added]
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+### Questions to Explore
+
+- What are the factors influencing Loyalty Program Enrollment and how can we further increase the enrollment rate in the future?
+- How can we increase customer's time spent in the store and money spent in Starbuck's products?
+- What are some future in-store campaigns to increase customer loyalty and money spending?
+
+### Data Exploration
+
+Since the dataset is relatively small. We will run a preliminary regression to see if there are enough significant coefficients.
+
+
+```{r}
+logit <- glm(membershipCard ~ ., family=binomial,data=starbucks_data)
+tidy(logit) %>% kable(digits = 2)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r echo=FALSE}
+backward_select <- step(logit, scope = formula(logit),
+                        direction = "backward")
+```
+
+```{r}
+logit2 <- glm(membershipCard ~ income + location + productRate + priceRate + 
+    serviceRate + promoMethodOthers + loyal, family=binomial,data=starbucks_data)
+tidy(logit2) %>% kable(digits = 2)
+```
+
+
+
+
+
