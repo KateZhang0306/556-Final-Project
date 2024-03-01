@@ -1,6 +1,6 @@
 ---
-title: "Proposal"
-author: "Joanna Fang, Wenjin Jiang, Eri Jibiki, Roy Song, Michael Wang, Kate Zhang"
+title: "Final Project Proposal"
+author: "Team 12: Joanna Fang, Wenjin Jiang, Eri Jibiki, Roy Song, Michael Wang, Kate Zhang"
 date: '2024-02-29'
 output: pdf_document
 ---
@@ -19,53 +19,107 @@ library(ggplot2)
 ```
 
 
-# Data Sets
+## Data Set Introduction
 
-• Describe the list of data sets you are thinking for the final project.
+This dataset, titled ‘Airline Passenger Satisfaction’, is a comprehensive collection of data that aims to capture and analyze the satisfaction levels of airline passengers. It includes 23 variables such as age, gender, type of travel (personal or business), class of service (Economy, Business, etc.), flight distance, in-flight services, cleanliness, and overall satisfaction. It consists of survey responses from over 130,000 participants, which is divided into training (80%) and testing (20%) sets.
 
-## Starbucks Customer Satisfactory Survey
-
-### Introduction 
-
-This dataset, titled 'Starbucks Customer Survey,' is originally from Kaggle (https://www.kaggle.com/datasets/mahirahmzh/starbucks-customer-retention-malaysia-survey/data). It consists of survey responses from over 100 participants regarding their purchasing behavior at Starbucks in Malaysia. Incomes are shown in Malaysian Ringgit (RM). The dataset includes 33 variables, covering demographic information about the customers—such as gender, age range, employment status, and income range—as well as their current behavior in purchasing from Starbucks, including the products purchased and the amount of money spent.
-
+This dataset is hosted on Kaggle. (https://www.kaggle.com/datasets/teejmahal20/airline-passenger-satisfaction?select=train.csv)
 
 ```{r cars}
 # import data
+airlines_data <- read.csv("train.csv")
 starbucks_data <- read.csv("Starbucks satisfactory survey encode cleaned.csv")
 ```
 
-### Variables Description
 
-[to be added]
+## Variables Description
 
-### Questions to Explore
+Important Varaibles:
 
-- What are the factors influencing Loyalty Program Enrollment and how can we further increase the enrollment rate in the future?
-- How can we increase customer's time spent in the store and money spent in Starbuck's products?
-- What are some future in-store campaigns to increase customer loyalty and money spending?
+1. Gender: Gender of the passengers (Female, Male)
+2. Customer Type: The customer type (Loyal customer, disloyal customer)
+3. Age: The actual age of the passengers
+4. Type of Travel: Purpose of the flight of the passengers (Personal Travel, Business Travel)
+5. Class: Travel class in the plane of the passengers (Business, Eco, Eco Plus)
+6. Flight distance: The flight distance of this journey
+7. Inflight wifi service: Satisfaction level of the inflight wifi service (0:Not Applicable;1-5)
+8. Departure/Arrival time convenient: Satisfaction level of Departure/Arrival time convenient
+9. Ease of Online booking: Satisfaction level of online booking
+10. Gate location: Satisfaction level of Gate location
+11. Food and drink: Satisfaction level of Food and drink
+12. Online boarding: Satisfaction level of online boarding
+13. Seat comfort: Satisfaction level of Seat comfort
+14. Inflight entertainment: Satisfaction level of inflight entertainment
+15. On-board service: Satisfaction level of On-board service
+16. Leg room service: Satisfaction level of Leg room service
+17. Baggage handling: Satisfaction level of baggage handling
+18. Check-in service: Satisfaction level of Check-in service
+19. Inflight service: Satisfaction level of inflight service
+20. Cleanliness: Satisfaction level of Cleanliness
+21. Departure Delay in Minutes: Minutes delayed when departure
+22. Arrival Delay in Minutes: Minutes delayed when Arrival
+23. Satisfaction: Airline satisfaction level(Satisfaction, neutral or dissatisfaction)
 
-### Data Exploration
+We will conduct a logistic regression using Customer Type as the response variable, and all other variables as the independent variables to explore factors influencing customer loyalty.
 
-Since the dataset is relatively small. We will run a preliminary regression to see if there are enough significant coefficients.
+We will conduct another logistic regression using Satisfaction as the response variable, and all other variables as the independent variables to explore factors influencing customer satisfaction.
+
+
+## Questions to Explore
+
+1. Which factors influence customer satisfaction the most? How to improve customer satisfaction in the future?
+2. Which factors influence customer loyalty the most? How to improve customer loyalty in the future?
+
+
+\newpage
+## Appendix: Exhibition
+
+### Preliminary Data Exploration and Regression
 
 
 ```{r}
-logit <- glm(membershipCard ~ ., family=binomial,data=starbucks_data)
+airlines_data <- airlines_data %>% 
+  mutate(customer_type_num = if_else(Customer.Type == "Loyal Customer", 1, 0))
+```
+
+```{r fig.width=5, fig.height=3.5, fig.align='center'}
+ggplot(airlines_data, aes(x = Customer.Type)) + geom_bar(width = 0.25, 
+                                          fill = "lightblue", color = "black")+
+  theme_bw()+
+  labs(title = "Customer Loyalty Type",
+       x = "Customer Loyalty Type",
+       y = "Count")
+```
+
+```{r}
+logit <- glm(customer_type_num ~ .-Customer.Type-id-X, family=binomial,
+             data=airlines_data)
 tidy(logit) %>% kable(digits = 2)
 ```
 
 
-```{r echo=FALSE}
-backward_select <- step(logit, scope = formula(logit),
-                        direction = "backward")
+
+```{r}
+airlines_data <- airlines_data %>% 
+  mutate(satisfaction_num = if_else(satisfaction == "satisfied", 1, 0))
+```
+
+```{r fig.width=5, fig.height=3.5,fig.align='center'}
+ggplot(airlines_data, aes(x = satisfaction)) + geom_bar(width = 0.25, 
+                                          fill = "lightblue", color = "black")+
+  theme_bw()+
+  labs(title = "Customer Satisfaction",
+       x = "Customer Satisfaction",
+       y = "Count")
 ```
 
 ```{r}
-logit2 <- glm(membershipCard ~ income + location + productRate + priceRate + 
-    serviceRate + promoMethodOthers + loyal, family=binomial,data=starbucks_data)
+logit2 <- glm(satisfaction_num ~ .-Customer.Type-satisfaction-id-X, 
+              family=binomial,data=airlines_data)
 tidy(logit2) %>% kable(digits = 2)
 ```
+
+
 
 
 
