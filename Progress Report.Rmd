@@ -1,0 +1,143 @@
+---
+title: "Progress Report"
+author: "Team 12: Joanna Fang, Wenjin Jiang, Eri Jibiki, Roy Song, Michael Wang, Kate Zhang"
+date: '2024-04-10'
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, include = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r}
+# load packages
+library(tidyverse)
+library(dplyr)
+library(knitr)
+library(broom)
+library(ggplot2)
+```
+
+
+## Background
+
+This dataset, titled ‘Airline Passenger Satisfaction’, is a comprehensive collection of data that aims to capture and analyze the satisfaction levels of airline passengers. It includes 23 variables such as age, gender, type of travel (personal or business), class of service (Economy, Business, etc.), flight distance, in-flight services, cleanliness, and overall satisfaction. It consists of survey responses from over 130,000 participants, which is divided into training (80%) and testing (20%) sets.
+
+This dataset is likely from an airline or research group focused on enhancing passenger satisfaction. In the competitive airline industry, understanding and improving passenger satisfaction is crucial for retaining loyalty, enhancing brand reputation, and securing a competitive edge. The dataset serves as a critical tool for improving strategic plan, identifying key satisfaction drivers, and facilitating improvements to better meet and exceed passenger expectations.
+
+This dataset is hosted on Kaggle. (https://www.kaggle.com/datasets/teejmahal20/airline-passenger-satisfaction?select=train.csv)
+
+```{r cars}
+# import data
+airlines_data <- read.csv("train.csv")
+```
+
+
+## Hypothesis List
+
+1. "Inflight Entertainment" is more important for the satisfaction rate of vacation travelers than it is for business travelers.
+2. Online booking convenience is more important for younger customers than older customers.
+3. "Seat Comfort" is more important for travelers in higher classes (e.g., Business, Eco Plus) than for those in lower classes.
+4. Customers in loyal program are more satisfied with the flight experience. 
+
+
+## Statistical Models
+
+We will conduct a logistic regression using Customer Type as the response variable, and all other variables as the independent variables to explore factors influencing customer satisfaction.
+
+To test our hypotheses, we will add interaction terms of "inflight entertainment x type of traveler", "ease of online booking x age", and "seat comfort x class" to the logistic regression model. (See Appendix)
+
+**Statistical Model for Customer Satisfaction**:
+$$log(\frac{P}{1-P})=\beta_0+\beta_1Gender+\beta_2Age+\beta_3Class+\beta_4Type\_of\_Travel+\beta_5Gate\_location$$
+$$+\beta_6Inflight\_wifi\_service+\beta_7Departure\_Arrival\_time\_convenient+\beta_8Ease\_of\_Online\_booking$$
+$$+\beta_9Food\_and\_drink+\beta_{10}Online\_boarding+\beta_{11}Seat\_comfort+\beta_{12}Inflight\_entertainment$$
+$$+\beta_{13}Onboard\_service+\beta_{14}Baggage\_handling+\beta_{15}Checkin\_service+\beta_{16}Inflight\_service$$
+$$+\beta_{17}Cleanliness+\beta_{18}Departure\_Delay\_in\_Minutes+\beta_{19}Arrival\_Delay\_in\_Minutes+\beta_{20}satisfaction$$
+$$+\beta_{21}Inflight\_entertainment\times Type\_of\_Travel+\beta_{22}Ease\_of\_Online\_booking\times Age+\beta_{23}Seat\_comfort\times Class$$
+
+
+
+## Preliminary Results
+1. The interaction between "Type.of.Travel(Personal Travel)" and "Inflight.entertainment" ($\beta_{21}$) is statistically significant and negative, meaning inflight entertainment is actually more important for business traveler than for personal traveler. This contradicts our hypothesis.
+
+2. The interaction between "Age" and "Ease of Online Booking" ($\beta_{22}$) is statistically significant and positive, but it is very small (0.0031). The ease of online booking is more important for elderly people than young people, but the influence is small.
+
+3. The interaction between "Class" and "Seat Comfort" ($\beta_{23}$) is statistically significant and negative, meaning seat comfort is more important for business traveler than for Eco Plus traveler than for Eco traveler. This is consistent with our hypothesis.
+
+4. The coefficient for customer type ($\beta_{20}$) is positive, meaning loyal customers do have a higher satisfaction rate than disloyal customers. This is consistent with our hypothesis
+
+
+\newpage
+## Appendix: Exhibition
+
+### Preliminary Data Exploration and Regression
+
+
+```{r}
+airlines_data <- airlines_data %>% 
+  mutate(customer_type_num = if_else(Customer.Type == "Loyal Customer", 1, 0))
+```
+
+```{r fig.width=5, fig.height=3.5,fig.align='center'}
+ggplot(airlines_data, aes(x = Customer.Type)) + geom_bar(width = 0.25, 
+                                          fill = "lightblue", color = "black")+
+  theme_bw()+
+  labs(title = "Customer Loyalty Type",
+       x = "Customer Loyalty Type",
+       y = "Count")
+```
+
+```{r}
+airlines_data <- airlines_data %>% 
+  mutate(satisfaction_num = if_else(satisfaction == "satisfied", 1, 0))
+```
+
+```{r fig.width=5, fig.height=3.5,fig.align='center'}
+ggplot(airlines_data, aes(x = satisfaction)) + geom_bar(width = 0.25, 
+                                          fill = "lightblue", color = "black")+
+  theme_bw()+
+  labs(title = "Customer Satisfaction",
+       x = "Customer Satisfaction",
+       y = "Count")
+```
+
+```{r fig.height=3.5,fig.align='center'}
+ggplot(airlines_data, aes(x = Inflight.entertainment, y = satisfaction, color = Type.of.Travel)) + 
+  geom_violin()+
+  theme_bw()+
+  labs(subtitle = "Satisfaction of Inflight Entertainment by Type of Traveler",
+       x = "Inflight Entertainment Satisfaction",
+       y = "Satisfation")
+```
+
+Business travelers who are satisfied with their trip tend to have a higher satisfaction rate with inflight entertainment compared to personal travelers. This indicates interactions between "inflight entertainment" and "type of traveler"
+
+```{r fig.height=3.5,fig.align='center'}
+ggplot(airlines_data, aes(x = Seat.comfort, y = satisfaction, color = Class)) + 
+  geom_violin()+
+  theme_bw()+
+  labs(subtitle = "How Satisfied Are Different Classes with Seat Comfort?",
+       x = "Seat Comfort",
+       y = "Satisfaction")
+```
+
+Business class travelers tend to have a different pattern of seat comfort satisfaction in their overall satisfaction rate compared to Eco and Eco Plus travelers. This indicates potential interactions between "seat comfort" and "class"
+
+### Model
+
+```{r}
+logit2 <- glm(satisfaction_num ~ Gender + Age + Type.of.Travel + Class + Flight.Distance
+              + Inflight.wifi.service + Departure.Arrival.time.convenient + Ease.of.Online.booking 
+              + Food.and.drink + Online.boarding + Seat.comfort + Inflight.entertainment
+              + On.board.service + Baggage.handling	+ Checkin.service + Inflight.service
+              + Cleanliness + Departure.Delay.in.Minutes + Arrival.Delay.in.Minutes	
+              + customer_type_num + Inflight.entertainment*Type.of.Travel + 
+                Ease.of.Online.booking*Age + Seat.comfort*Class, 
+              family=binomial,data=airlines_data)
+tidy(logit2) %>% kable(digits = 4)
+```
+
+
+
+
+
